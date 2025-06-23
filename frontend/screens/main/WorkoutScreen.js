@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-nativ
 import { Text, Card, Title, Paragraph, Button, DataTable, FAB, ActivityIndicator, IconButton, Searchbar, Chip } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 const WorkoutScreen = ({ navigation }) => {
   const { api } = useAuth();

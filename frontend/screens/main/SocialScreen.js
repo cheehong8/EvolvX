@@ -41,22 +41,34 @@ export default function SocialScreen({ navigation }) {
       setLoading(true);
 
       /* 1) shared workouts */
-      const { data: sw } = await api.get(
-        '/social/shared-workouts',
-        authHdr(token)
-      );
-      setSharedWorkouts(Array.isArray(sw) ? sw : []);
+      try {
+        const { data: sw } = await api.get(
+          '/social/shared-workouts',
+          authHdr(token)
+        );
+        setSharedWorkouts(Array.isArray(sw) ? sw : []);
+      } catch (swErr) {
+        console.log('Shared workouts endpoint not available:', swErr.response?.status);
+        setSharedWorkouts([]); // Set empty array as fallback
+      }
 
       /* 2) friends list */
-      const { data: fr } = await api.get(
-        '/social/friends',
-        { ...authHdr(token), params: { status: 'accepted' } }
-      );
-      setFriends(Array.isArray(fr) ? fr : []);
+      let friends = [];
+      try {
+        const { data: fr } = await api.get(
+          '/social/friends',
+          { ...authHdr(token), params: { status: 'accepted' } }
+        );
+        friends = Array.isArray(fr) ? fr : [];
+        setFriends(friends);
+      } catch (frErr) {
+        console.log('Friends endpoint not available:', frErr.response?.status);
+        setFriends([]); // Set empty array as fallback
+      }
 
       /* 3) quick mock for recent activity */
       setActivityFeed(
-        (Array.isArray(fr) ? fr : []).slice(0, 5).map((f) => ({
+        friends.slice(0, 5).map((f) => ({
           id: `act-${f.user_id}`,
           user_id: f.user_id,
           username: f.username,
@@ -69,8 +81,8 @@ export default function SocialScreen({ navigation }) {
       );
     } catch (err) {
       console.error('Error loading social data:', err);
-      setError('Failed to load data. Pull down to refresh.');
-      if (err.response && (err.response.status === 401 || err.response.status === 422)) {
+      setError('Some social features may not be available.');
+      if (err.response?.status === 401) {
         await logout();
         navigation.replace('Login');
       }

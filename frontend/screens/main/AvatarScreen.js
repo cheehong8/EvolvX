@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from '
 import { Text, Card, Title, Paragraph, Button, RadioButton, Chip, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 const AvatarScreen = ({ navigation }) => {
   const { user, api } = useAuth();

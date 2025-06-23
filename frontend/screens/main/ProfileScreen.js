@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Text, Card, Title, Paragraph, Button, Avatar, TextInput, Switch, Divider, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, getProfile, updateProfile, logout } = useAuth();

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Text, Card, Title, Paragraph, Button, ProgressBar, Chip, FAB, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function HomeScreen({ navigation }) {
@@ -28,16 +28,24 @@ export default function HomeScreen({ navigation }) {
       setError(null); setLoading(true);
 
       /* recent workouts */
-      const { data: wData } = await api.get('/workouts', { params: { page:1, per_page:5 } });
-      const recent = wData.workouts || [];
-      setWorkouts(recent);
+      try {
+        const { data: wData } = await api.get('/workouts', { params: { page:1, per_page:5 } });
+        const recent = wData.workouts || [];
+        setWorkouts(recent);
+        calcStreak(recent);
+      } catch (workoutErr) {
+        console.log('Workouts endpoint not available:', workoutErr.response?.status);
+        setWorkouts([]); // Set empty array as fallback
+      }
 
       /* rankings */
-      const { data: rData } = await api.get(`/rankings/user/${user.id}`);
-      setRankings(Array.isArray(rData) ? rData : []);
-
-      /* streak */
-      calcStreak(recent);
+      try {
+        const { data: rData } = await api.get(`/rankings/user/${user.id}`);
+        setRankings(Array.isArray(rData) ? rData : []);
+      } catch (rankingErr) {
+        console.log('Rankings endpoint not available:', rankingErr.response?.status);
+        setRankings([]); // Set empty array as fallback
+      }
     } catch (err) {
       console.error('HomeScreen load error:', err);
       setError('Failed to load data. Pull down to refresh.');

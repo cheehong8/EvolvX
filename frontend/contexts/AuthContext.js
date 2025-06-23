@@ -25,16 +25,48 @@ export function AuthProvider({ children }) {
   const [loading,setLoading]= useState(true);
   const [error,  setError]  = useState('');
 
+  // Logout function for token expiration
+  const logout = async () => {
+    try {
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('user');
+      delete api.defaults.headers.common.Authorization;
+      setToken(null);
+      setUser(null);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
+
+  // Add response interceptor to handle token expiration
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          logout(); // Auto-logout on token expiry
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => api.interceptors.response.eject(interceptor);
+  }, []);
+
   /* ───── boot ───── */
   useEffect(() => {
     (async () => {
       try {
-        const [[, storedToken], [, userJson]] = await AsyncStorage.multiGet([
-          'auth_token',
-          'user',
-        ]);
+        const storedToken = await AsyncStorage.getItem('auth_token');
+        const userJson = await AsyncStorage.getItem('user');
+        
         if (storedToken) setToken(storedToken);
-        if (userJson)    setUser(JSON.parse(userJson));
+        if (userJson) setUser(JSON.parse(userJson));
+      } catch (error) {
+        console.error('Error loading stored auth data:', error);
+        // Clear potentially corrupted data
+        await AsyncStorage.removeItem('auth_token');
+        await AsyncStorage.removeItem('user');
       } finally {
         setLoading(false);
       }
@@ -49,10 +81,8 @@ export function AuthProvider({ children }) {
       const { data } = await axios.post(`${API_URL}/auth/login`, { email, password });
       const { access_token, user_id, username } = data;
 
-      await AsyncStorage.multiSet([
-        ['auth_token', access_token],
-        ['user', JSON.stringify({ id: user_id, username, email })],
-      ]);
+      await AsyncStorage.setItem('auth_token', access_token);
+      await AsyncStorage.setItem('user', JSON.stringify({ id: user_id, username, email }));
 
       api.defaults.headers.common.Authorization = `Bearer ${access_token}`; // NEW
       setToken(access_token);                                               // NEW
@@ -91,10 +121,8 @@ export function AuthProvider({ children }) {
       const { access_token, user_id } = data;
       const userData = { id: user_id, username, email };
 
-      await AsyncStorage.multiSet([
-        ['auth_token', access_token],
-        ['user', JSON.stringify(userData)],
-      ]);
+      await AsyncStorage.setItem('auth_token', access_token);
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
 
       api.defaults.headers.common.Authorization = `Bearer ${access_token}`; // NEW
       setToken(access_token);                                               // NEW
@@ -109,17 +137,6 @@ export function AuthProvider({ children }) {
     }
   }; // ← function now properly closed
 
-  const logout = async () => {
-    setLoading(true);
-    try {
-      await AsyncStorage.multiRemove(['auth_token', 'user']);
-      delete api.defaults.headers.common.Authorization; // NEW
-      setToken(null);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <AuthContext.Provider
