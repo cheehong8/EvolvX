@@ -1549,6 +1549,32 @@ def update_user_rankings(user_id):
     except Exception as e:
         db.session.rollback()
         print(f"Error updating user rankings: {e}")
+# ────────────────────────────────────────────
+# New ranking & social endpoints (stubs)
+# ────────────────────────────────────────────
+@app.route('/api/rankings/user/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_user_rankings(user_id):
+    # TODO: wire up real ranking logic
+    mock_rankings = [
+        {"muscle_group": "chest", "rank": "Silver", "mmr": 750},
+        {"muscle_group": "back",  "rank": "Gold",   "mmr":1100},
+        {"muscle_group": "legs",  "rank": "Bronze", "mmr": 450}
+    ]
+    return jsonify(mock_rankings), 200
+
+@app.route('/api/social/shared-workouts', methods=['GET'])
+@jwt_required()
+def get_shared_workouts():
+    # TODO: return real shared workouts list
+    return jsonify([]), 200
+
+@app.route('/api/social/friends', methods=['GET'])
+@jwt_required()
+def get_friends():
+    status = request.args.get('status', 'accepted')
+    # TODO: filter by status
+    return jsonify([]), 200
 
 # Initialize database
 def initialize_database():
