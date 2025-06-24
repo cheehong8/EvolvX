@@ -26,14 +26,7 @@ app = Flask(__name__)
 
 # Allow any origin to hit any /api/* endpoint **and** keep the
 # "Authorization" header so browsers can send `Bearer <jwt>`.
-CORS(app, resources={
-  r"/api/*": {
-    "origins": [
-      "http://localhost:8081",  # Metro bundler for React Native
-      "http://localhost:19006"  # Expo Web (if you use it)
-    ]
-  }
-})
+CORS(app)
 
 
 # -------------------------------------------
