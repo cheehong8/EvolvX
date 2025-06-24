@@ -26,7 +26,9 @@ app = Flask(__name__)
 
 # Allow any origin to hit any /api/* endpoint **and** keep the
 # "Authorization" header so browsers can send `Bearer <jwt>`.
-CORS(app)
+CORS(app,
+     resources={r"/api/*": {"origins": ["http://localhost:8081"]}},
+     supports_credentials=True)
 
 
 # -------------------------------------------
