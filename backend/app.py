@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import JSON
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -238,6 +238,7 @@ def register():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/auth/login', methods=['POST'])
+@cross_origin(origins="http://localhost:8081", supports_credentials=True)
 def login():
     data = request.get_json()
     
