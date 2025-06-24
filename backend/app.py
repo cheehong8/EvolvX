@@ -336,52 +336,50 @@ def update_profile():
 @app.route('/api/workouts', methods=['GET'])
 @jwt_required()
 def get_workouts():
-    current_user_id = get_jwt_identity()
-    
-    try:
-        # Get query parameters
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 10, type=int)
-        
-        # Query workouts with pagination
-        workouts_query = Workout.query.filter_by(user_id=current_user_id).order_by(Workout.workout_date.desc())
-        workouts_paginated = workouts_query.paginate(page=page, per_page=per_page, error_out=False)
-        
-        result = []
-        for workout in workouts_paginated.items:
-            workout_data = {
-                'workout_id': workout.workout_id,
-                'workout_name': workout.workout_name,
-                'workout_date': workout.workout_date.isoformat(),
-                'duration': workout.duration,
-                'notes': workout.notes,
-                'created_at': workout.created_at.isoformat(),
-                'exercises': []
-            }
-            
-            for workout_exercise in workout.exercises:
-                exercise = workout_exercise.exercise
-                exercise_data = {
-                    'exercise_id': exercise.exercise_id,
-                    'name': exercise.name,
-                    'muscle_group': exercise.muscle_group,
-                    'sets': workout_exercise.sets,
-                    'reps': workout_exercise.reps,
-                    'weight': workout_exercise.weight
-                }
-                workout_data['exercises'].append(exercise_data)
-            
-            result.append(workout_data)
-        
-        return jsonify({
-            'workouts': result,
-            'total': workouts_paginated.total,
-            'pages': workouts_paginated.pages,
-            'current_page': page
-        }), 200
-    
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    user_id  = get_jwt_identity()
+    page     = request.args.get('page',     1,  type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    if page < 1 or per_page < 1:
+        return jsonify({ 'error': 'page and per_page must be positive integers' }), 422
+
+    paginated = (
+        Workout.query
+        .filter_by(user_id=user_id)
+        .order_by(Workout.created_at.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+
+    # <-- your manual mapping here -->
+    result = []
+    for workout in paginated.items:
+        workout_data = {
+            'workout_id':   workout.workout_id,
+            'workout_name': workout.workout_name,
+            'workout_date': workout.workout_date.isoformat(),
+            'duration':     workout.duration,
+            'notes':        workout.notes,
+            'created_at':   workout.created_at.isoformat(),
+            'exercises':    []
+        }
+        for we in workout.exercises:
+            ex = we.exercise
+            workout_data['exercises'].append({
+                'exercise_id':   ex.exercise_id,
+                'name':          ex.name,
+                'muscle_group':  ex.muscle_group,
+                'sets':          we.sets,
+                'reps':          we.reps,
+                'weight':        we.weight,
+            })
+        result.append(workout_data)
+
+    return jsonify({
+        'workouts': result,
+        'total':    paginated.total,
+        'page':     page
+    })
+
 
 @app.route('/api/workouts', methods=['POST'])
 @jwt_required()
