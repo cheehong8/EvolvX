@@ -1626,6 +1626,27 @@ def initialize_database():
 
 with app.app_context():
     initialize_database()
+from flask import make_response, request
+
+# This runs after every request, ensuring CORS headers are present
+@app.after_request
+def apply_cors(response):
+    # Allow your Metro/Expo origin
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:8081"
+    # Allow any headers your client might send (e.g. Content-Type, Authorization)
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+    # Allow all the methods your API supports
+    response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+    return response
+
+# (Optional) Explicitly handle OPTIONS preflights if needed
+@app.route("/api/auth/login", methods=["OPTIONS"])
+def login_preflight():
+    resp = make_response("", 204)
+    resp.headers["Access-Control-Allow-Origin"] = "http://localhost:8081"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+    resp.headers["Access-Control-Allow-Methods"] = "POST,OPTIONS"
+    return resp
 
 # Run the app
 if __name__ == '__main__':
